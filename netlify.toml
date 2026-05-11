@@ -3,7 +3,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  SECRETS_SCAN_OMIT_KEYS = "RAZORPAY_KEY"
+  SECRETS_SCAN_OMIT_KEYS = "RAZORPAY_KEY_ID"
 
 [[redirects]]
   from = "/api/groq"
