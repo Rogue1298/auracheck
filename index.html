@@ -37,8 +37,7 @@
     "operatingSystem": "Web Browser",
     "isAccessibleForFree": true,
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "author": { "@type": "Organization", "name": "AuraCheck AI", "url": "https://auracheck.space" },
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.7", "reviewCount": "3812" }
+    "author": { "@type": "Organization", "name": "AuraCheck AI", "url": "https://auracheck.space" }
   }
   </script>
 
@@ -431,6 +430,7 @@
           <button onclick="handleGenerate()" class="mt-6 w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 font-bold py-3.5 px-4 rounded-xl shadow-lg transform transition-all hover:-translate-y-0.5">
             Generate Aura Reading
           </button>
+          <p id="input-error" class="hidden text-center text-red-400 text-xs mt-2 font-medium"></p>
           <p class="text-center text-slate-600 text-xs mt-3">Your data is never stored. For entertainment purposes.</p>
         </div>
       </div>
@@ -944,17 +944,7 @@
     ];
     let loadingTimer;
 
-    function getScoreTier(score) {
-      if (score >= 900)  return { label: 'LEGENDARY',  bg: '#78350f', color: '#fcd34d' };
-      if (score >= 700)  return { label: 'ELITE',      bg: '#312e81', color: '#a5b4fc' };
-      if (score >= 500)  return { label: 'ASCENDED',   bg: '#4a044e', color: '#f0abfc' };
-      if (score >= 300)  return { label: 'BASED',      bg: '#14532d', color: '#86efac' };
-      if (score >= 100)  return { label: 'SOLID',      bg: '#164e63', color: '#67e8f9' };
-      if (score >= 0)    return { label: 'MID',        bg: '#1e293b', color: '#94a3b8' };
-      if (score >= -300) return { label: 'COOKED',     bg: '#7c2d12', color: '#fca5a5' };
-      if (score >= -600) return { label: 'DOWN BAD',   bg: '#7f1d1d', color: '#f87171' };
-      return               { label: 'NPC',            bg: '#1c1917', color: '#a8a29e' };
-    }
+
 
     function getCardGlow(score) {
       if (score >= 600) return { shadow: '0 0 40px rgba(250,204,21,0.25), 0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(250,204,21,0.3)'  };
@@ -987,7 +977,14 @@
     async function handleGenerate(isPaid = false) {
       const name = document.getElementById('username').value.trim();
       const hobby = document.getElementById('hobby').value.trim();
-      if (!name) return alert("Enter a name!");
+      if (!name) {
+        const errEl = document.getElementById('input-error');
+        errEl.innerText = 'Please enter a name or handle first.';
+        errEl.classList.remove('hidden');
+        document.getElementById('username').focus();
+        return;
+      }
+      document.getElementById('input-error').classList.add('hidden');
       if (appMode === 'true' && !isPaid) {
         localStorage.setItem('pendingName', name);
         localStorage.setItem('pendingHobby', hobby);
@@ -1153,7 +1150,8 @@
           if (verified) {
             handleGenerate(true);
           } else {
-            alert('Payment verification failed. Please contact support.');
+            document.getElementById('payment-modal').classList.remove('hidden');
+            document.getElementById('payment-modal').innerHTML += '<p class="text-red-400 text-sm text-center mt-3">Payment verification failed. Please email intuzencompany@gmail.com with your payment ID.</p>';
           }
         },
         prefill: { name: name },
@@ -1441,6 +1439,8 @@
     }
 
     function submitReview(emoji) {
+      // Stores reactions locally — to send to a real analytics endpoint,
+      // create /api/review and point the fetch here.
       const reviews = JSON.parse(localStorage.getItem('auracheck_reviews') || '[]');
       reviews.push({ emoji, score: finalScore, ts: Date.now() });
       localStorage.setItem('auracheck_reviews', JSON.stringify(reviews));
