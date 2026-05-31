@@ -916,6 +916,7 @@
           Cancel
         </button>
       </div>
+      <p id="payment-error" class="hidden text-red-400 text-xs text-center mt-4 leading-relaxed"></p>
     </div>
   </div>
 
@@ -989,6 +990,7 @@
         localStorage.setItem('pendingName', name);
         localStorage.setItem('pendingHobby', hobby);
         document.getElementById('local-price-display').innerText = detectLocalPrice(29);
+        document.getElementById('payment-error').classList.add('hidden');
         document.getElementById('payment-modal').classList.remove('hidden');
         return;
       }
@@ -1150,8 +1152,10 @@
           if (verified) {
             handleGenerate(true);
           } else {
+            const payErr = document.getElementById('payment-error');
+            payErr.innerText = 'Payment could not be verified. If you were charged, email intuzencompany@gmail.com with your payment ID and we\'ll sort it out.';
+            payErr.classList.remove('hidden');
             document.getElementById('payment-modal').classList.remove('hidden');
-            document.getElementById('payment-modal').innerHTML += '<p class="text-red-400 text-sm text-center mt-3">Payment verification failed. Please email intuzencompany@gmail.com with your payment ID.</p>';
           }
         },
         prefill: { name: name },
