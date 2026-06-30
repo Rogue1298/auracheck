@@ -468,6 +468,11 @@
                     <p id="ui-flags" class="text-orange-500 font-bold text-sm flex-shrink-0 text-right">⚠️ ? Flags</p>
                   </div>
                 </div>
+                <div id="aura-band" class="flex items-center gap-2.5 mb-5 px-3.5 py-2.5 rounded-xl border border-slate-700/40">
+                  <span id="aura-dot" class="rounded-full flex-shrink-0" style="width:15px;height:15px;display:inline-block;background:#8b5cf6;box-shadow:0 0 10px rgba(139,92,246,0.6);"></span>
+                  <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400">Dominant Aura</span>
+                  <span id="ui-aura-color" class="ml-auto font-black text-base" style="color:#8b5cf6;">Violet</span>
+                </div>
                 <div class="bg-slate-950/50 rounded-xl p-4 border border-slate-800 mb-5">
                   <p class="text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">AI Diagnosis</p>
                   <p id="ui-roast" class="text-slate-200 italic font-medium leading-relaxed">Loading...</p>
@@ -503,6 +508,7 @@
           </div>
         </div>
         <div class="flex flex-col gap-3 mt-4">
+          <a id="aura-learn-link" href="/aura-colors.html" class="text-center text-xs text-fuchsia-400 hover:text-fuchsia-300 transition underline underline-offset-4">Learn what your aura color means →</a>
           <!-- Save + Reset -->
           <div class="flex gap-3">
             <button onclick="downloadCard()" class="flex-1 bg-slate-800 hover:bg-slate-700 font-medium py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2">
@@ -1004,12 +1010,21 @@
       };
     }
 
-    function getCardGlow(score) {
-      if (score >= 600) return { shadow: '0 0 40px rgba(250,204,21,0.25), 0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(250,204,21,0.3)'  };
-      if (score >= 300) return { shadow: '0 0 40px rgba(74,222,128,0.2),  0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(74,222,128,0.25)' };
-      if (score >= 0)   return { shadow: '0 0 40px rgba(167,139,250,0.2), 0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(167,139,250,0.2)' };
-      if (score >= -400)return { shadow: '0 0 40px rgba(251,146,60,0.2),  0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(251,146,60,0.2)'  };
-      return                   { shadow: '0 0 40px rgba(248,113,113,0.25),0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(248,113,113,0.25)'};
+    // Dominant aura colour — deterministic per name, matches the
+    // 9 colours in the Aura Color Encyclopedia.
+    const AURA_PALETTE = [
+      { name: 'Red',    slug: 'red',    hex: '#ef4444', rgb: [239, 68, 68] },
+      { name: 'Orange', slug: 'orange', hex: '#f97316', rgb: [249, 115, 22] },
+      { name: 'Yellow', slug: 'yellow', hex: '#facc15', rgb: [250, 204, 21] },
+      { name: 'Green',  slug: 'green',  hex: '#22c55e', rgb: [34, 197, 94] },
+      { name: 'Blue',   slug: 'blue',   hex: '#3b82f6', rgb: [59, 130, 246] },
+      { name: 'Indigo', slug: 'indigo', hex: '#6366f1', rgb: [99, 102, 241] },
+      { name: 'Violet', slug: 'violet', hex: '#8b5cf6', rgb: [139, 92, 246] },
+      { name: 'Pink',   slug: 'pink',   hex: '#ec4899', rgb: [236, 72, 153] },
+      { name: 'Gold',   slug: 'gold',   hex: '#f59e0b', rgb: [245, 158, 11] }
+    ];
+    function getAuraColor(name) {
+      return AURA_PALETTE[hashStr((name || '').toLowerCase()) % AURA_PALETTE.length];
     }
 
     // No redirect-based payment flow needed — Razorpay inline modal handles everything
@@ -1263,11 +1278,25 @@
       document.getElementById('ui-compatible').innerText = aiResult.compatibleWith || '—';
       document.getElementById('ui-hiddenpow').innerText = aiResult.hiddenPower || '—';
 
-      // Dynamic card glow
-      const glow = getCardGlow(finalScore);
+      // Dominant aura colour — sets the card's identity + glow
+      const aura = getAuraColor(name);
+      const [ar, ag, ab] = aura.rgb;
+      document.getElementById('ui-aura-color').innerText = aura.name;
+      document.getElementById('ui-aura-color').style.color = aura.hex;
+      const dot = document.getElementById('aura-dot');
+      dot.style.background = aura.hex;
+      dot.style.boxShadow = `0 0 10px rgba(${ar},${ag},${ab},0.6)`;
+      const band = document.getElementById('aura-band');
+      band.style.background = `rgba(${ar},${ag},${ab},0.08)`;
+      band.style.borderColor = `rgba(${ar},${ag},${ab},0.35)`;
+      const learn = document.getElementById('aura-learn-link');
+      learn.href = `/aura-color-${aura.slug}.html`;
+      learn.innerText = `Learn what your ${aura.name} aura means →`;
+
+      // Card glow tied to the aura colour
       const card = document.getElementById('the-card');
-      card.style.boxShadow = glow.shadow;
-      card.style.borderColor = glow.border;
+      card.style.boxShadow = `0 0 45px rgba(${ar},${ag},${ab},0.22), 0 20px 40px rgba(0,0,0,0.6)`;
+      card.style.borderColor = `rgba(${ar},${ag},${ab},0.4)`;
 
       // Paid → unlock immediately; Free roast → blur + ad button
       if (isPaidReading) {
