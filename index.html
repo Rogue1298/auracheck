@@ -294,9 +294,9 @@
         <div class="p-1.5 bg-fuchsia-500/10 rounded-lg">
           <svg class="w-5 h-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
         </div>
-        <span class="font-extrabold text-white text-lg tracking-tight">AuraCheck</span>
+        <span class="font-extrabold text-white text-base sm:text-lg tracking-tight">AuraCheck</span>
       </a>
-      <div class="flex gap-1 sm:gap-3 text-sm">
+      <div class="flex gap-0.5 sm:gap-3 text-xs sm:text-sm">
         <a href="/about.html" class="text-slate-400 hover:text-fuchsia-400 transition px-2 py-1 rounded-lg hover:bg-slate-800">About</a>
         <a href="/aura-colors.html" class="text-slate-400 hover:text-fuchsia-400 transition px-2 py-1 rounded-lg hover:bg-slate-800">Colors</a>
         <a href="/blog.html" class="text-slate-400 hover:text-fuchsia-400 transition px-2 py-1 rounded-lg hover:bg-slate-800">Blog</a>
@@ -948,7 +948,61 @@
     ];
     let loadingTimer;
 
+    // ── Client-side fallback reading ───────────────────────────────────────
+    // Guarantees the tool ALWAYS returns a result, even if the AI API is
+    // unavailable (rate-limited, cold start, offline). Deterministic per
+    // name so repeat reads stay consistent.
+    function hashStr(s) {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return Math.abs(h);
+    }
+    function pickFrom(arr, seed) { return arr[seed % arr.length]; }
 
+    function localReading(name, hobby, mode) {
+      const h = hashStr((name + '|' + (hobby || '') + '|' + mode).toLowerCase());
+      const flex = hobby ? hobby : 'your "personality"';
+      const auraColors = ['Violet', 'Indigo', 'Gold', 'Green', 'Blue', 'Pink', 'Red', 'Orange', 'Yellow'];
+      const reasons = ['they balance your chaos', 'they get your energy without a manual', 'opposites that somehow work', 'they keep you grounded', 'same frequency, less drama'];
+      const compatible = pickFrom(auraColors, h >> 5) + ' auras — ' + pickFrom(reasons, h >> 9);
+
+      if (mode === 'roast') {
+        return {
+          score: String(-(120 + (h % 760))),
+          vibe: pickFrom(['Cooked', 'Down Bad', 'Chronically Online', 'Delulu', 'Feral', 'Unserious', 'NPC Energy', 'Crashing Out', 'Touch Grass'], h >> 2),
+          flags: pickFrom(['9 Red Flags', '7 Red Flags', '12 Red Flags', '5 Red Flags', 'Infinite Red Flags', 'Red Flag Factory'], h >> 4),
+          delusion: pickFrom(['Max', 'Severe', 'Lethal', 'Cooked', 'Terminal', 'Elite'], h >> 6),
+          roast: pickFrom([
+            'You peaked in a group chat that no longer exists, and ' + flex + " isn't the flex you think it is. The confidence is admirable; the evidence is missing.",
+            'Your red flags have red flags, yet somehow you\'re still convinced you\'re the catch. Bold strategy for someone who replies "k" unironically.',
+            'You treat ' + flex + ' like a whole personality and call it being "different." The multiverse scanned you twice just to be sure.',
+            'Main character energy with a side-character storyline. You romanticize your life so hard the universe sent you a buffering icon.',
+            'You\'re the human equivalent of a "we need to talk" text — alarming, dramatic, and usually about nothing. Iconic, in the worst way.'
+          ], h >> 3),
+          toxicTrait: pickFrom(['Leaves people on read then panics', 'Starts texts with "we need to talk"', 'Trauma-dumps on day one', 'Ghosts, then likes your post 3 weeks later', 'Weaponizes the silent treatment', 'Says "I\'m fine" while plotting'], h >> 7),
+          greenFlag: pickFrom(['Actually texts back (eventually)', 'Remembers your coffee order', 'Hypes up their friends relentlessly', 'Shares the last fry', 'Gives weirdly good advice', 'Always picks a decent restaurant'], h >> 8),
+          compatibleWith: compatible,
+          hiddenPower: pickFrom(['Disarming honesty when cornered', 'Can make anyone laugh mid-crisis', 'Reads a room in 0.2 seconds', 'Loyalty that survives almost anything', 'Turning chaos into a good story'], h >> 10)
+        };
+      }
+      return {
+        score: String(420 + (h % 560)),
+        vibe: pickFrom(['Elite', 'Grounded', 'Magnetic', 'Luminous', 'Quietly Powerful', 'Old Soul', 'Rare Frequency', 'Steady Flame', 'Deep Current'], h >> 2),
+        flags: pickFrom(['3 Green Flags', '5 Green Flags', '4 Green Flags', '7 Green Flags', 'Mostly Green Flags'], h >> 4),
+        delusion: pickFrom(['Low', 'Minimal', 'Aware', 'Tiny', 'Healthy', 'None'], h >> 6),
+        roast: pickFrom([
+          'There\'s a quiet steadiness to you that people lean on more than they say out loud. ' + (hobby ? 'Your pull toward ' + hobby + ' says you crave meaning, not just motion.' : 'You crave meaning, not just motion.'),
+          'You feel things deeply but rarely make it everyone else\'s problem — that restraint is a kind of strength. The risk is you carry too much alone.',
+          'You read people before they finish their sentences, which makes you a rare kind of safe to be around. Just don\'t mistake everyone\'s comfort for your responsibility.',
+          'You\'re more driven than you let on, and ' + flex + ' is where that quiet ambition leaks out. People underestimate you exactly once.',
+          'Your energy is calm on the surface and busy underneath — still water with a strong current. When you commit, you don\'t do it halfway.'
+        ], h >> 3),
+        toxicTrait: pickFrom(['Overthinks texts for hours', 'Says yes when they mean no', 'Bottles things up too long', 'Apologizes a little too much', 'Takes on everyone\'s problems', 'Struggles to ask for help'], h >> 7),
+        greenFlag: pickFrom(['Genuinely remembers the small details', 'Makes people feel safe being honest', 'Shows up when it actually matters', 'Listens more than they speak', 'Loyal past the point of convenience', 'Calm in everyone else\'s storm'], h >> 8),
+        compatibleWith: compatible,
+        hiddenPower: pickFrom(['Reading people before they speak', 'Turning empathy into real influence', 'Staying calm when it counts most', 'Seeing patterns others miss', 'Making hard things look effortless', 'Quiet, unshakeable conviction'], h >> 10)
+      };
+    }
 
     function getCardGlow(score) {
       if (score >= 600) return { shadow: '0 0 40px rgba(250,204,21,0.25), 0 20px 40px rgba(0,0,0,0.6)',  border: 'rgba(250,204,21,0.3)'  };
@@ -1020,7 +1074,10 @@
         } else {
           systemPrompt = `You are an honest internet psychic. Read the user's true vibe based on their name and hobby. Respond ONLY with a raw JSON object. Format: {"score": "850", "vibe": "Elite", "flags": "3 Green Flags", "delusion": "Low", "roast": "2 sentences analyzing their true personality honestly", "toxicTrait": "1 minor flaw", "greenFlag": "1 amazing trait", "compatibleWith": "aura color they're most compatible with + 1 short reason", "hiddenPower": "1 unique hidden strength they carry"}. CRITICAL: "delusion" MUST be a single word (max 8 characters) like "Low", "None", "Minimal", "Aware", "Tiny". NEVER use a phrase or sentence.`;
         }
+        let aiResult = null;
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
           const response = await fetch(GROQ_PROXY, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1028,24 +1085,25 @@
               model: "llama-3.1-8b-instant",
               messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `Name: ${name}. Hobby: ${hobby || 'Nothing'}` }],
               temperature: 0.8
-            })
+            }),
+            signal: controller.signal
           });
-          if (!response.ok) { const errData = await response.text(); throw new Error(`API Error: ${errData}`); }
+          clearTimeout(timeoutId);
+          if (!response.ok) { throw new Error("API unavailable"); }
           const data = await response.json();
           let aiText = data.choices[0].message.content.trim();
           if (aiText.startsWith("```json")) aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
-          const aiResult = JSON.parse(aiText);
-          localStorage.setItem(cacheKey, JSON.stringify(aiResult));
-          localStorage.removeItem('pendingName');
-          localStorage.removeItem('pendingHobby');
-          clearInterval(loadingTimer);
-          displayResult(name, aiResult);
+          aiResult = JSON.parse(aiText);
         } catch (error) {
-          document.getElementById('loading-text').innerText = "Generation Failed.";
-          document.getElementById('error-text').innerText = error.message;
-          document.getElementById('error-text').classList.remove('hidden');
-          setTimeout(() => resetApp(), 4000);
+          // Graceful fallback: the tool always produces a reading, even if
+          // the AI service is rate-limited, slow, or unreachable.
+          aiResult = localReading(name, hobby, appMode);
         }
+        localStorage.setItem(cacheKey, JSON.stringify(aiResult));
+        localStorage.removeItem('pendingName');
+        localStorage.removeItem('pendingHobby');
+        clearInterval(loadingTimer);
+        displayResult(name, aiResult);
       }
     }
 
