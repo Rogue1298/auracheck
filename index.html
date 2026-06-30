@@ -1278,25 +1278,35 @@
       document.getElementById('ui-compatible').innerText = aiResult.compatibleWith || '—';
       document.getElementById('ui-hiddenpow').innerText = aiResult.hiddenPower || '—';
 
-      // Dominant aura colour — sets the card's identity + glow
-      const aura = getAuraColor(name);
-      const [ar, ag, ab] = aura.rgb;
-      document.getElementById('ui-aura-color').innerText = aura.name;
-      document.getElementById('ui-aura-color').style.color = aura.hex;
-      const dot = document.getElementById('aura-dot');
-      dot.style.background = aura.hex;
-      dot.style.boxShadow = `0 0 10px rgba(${ar},${ag},${ab},0.6)`;
-      const band = document.getElementById('aura-band');
-      band.style.background = `rgba(${ar},${ag},${ab},0.08)`;
-      band.style.borderColor = `rgba(${ar},${ag},${ab},0.35)`;
-      const learn = document.getElementById('aura-learn-link');
-      learn.href = `/aura-color-${aura.slug}.html`;
-      learn.innerText = `Learn what your ${aura.name} aura means →`;
-
-      // Card glow tied to the aura colour
+      // The genuine dominant aura colour is a TRUE AURA exclusive.
+      // Brutal Roast is just the roast — no real aura reveal.
       const card = document.getElementById('the-card');
-      card.style.boxShadow = `0 0 45px rgba(${ar},${ag},${ab},0.22), 0 20px 40px rgba(0,0,0,0.6)`;
-      card.style.borderColor = `rgba(${ar},${ag},${ab},0.4)`;
+      const band = document.getElementById('aura-band');
+      const learn = document.getElementById('aura-learn-link');
+
+      if (appMode === 'true') {
+        const aura = getAuraColor(name);
+        const [ar, ag, ab] = aura.rgb;
+        document.getElementById('ui-aura-color').innerText = aura.name;
+        document.getElementById('ui-aura-color').style.color = aura.hex;
+        const dot = document.getElementById('aura-dot');
+        dot.style.background = aura.hex;
+        dot.style.boxShadow = `0 0 10px rgba(${ar},${ag},${ab},0.6)`;
+        band.style.background = `rgba(${ar},${ag},${ab},0.08)`;
+        band.style.borderColor = `rgba(${ar},${ag},${ab},0.35)`;
+        band.classList.remove('hidden');
+        learn.href = `/aura-color-${aura.slug}.html`;
+        learn.innerText = `Learn what your ${aura.name} aura means →`;
+        learn.classList.remove('hidden');
+        card.style.boxShadow = `0 0 45px rgba(${ar},${ag},${ab},0.22), 0 20px 40px rgba(0,0,0,0.6)`;
+        card.style.borderColor = `rgba(${ar},${ag},${ab},0.4)`;
+      } else {
+        // Brutal Roast: hide the aura reveal, use a neutral roast glow
+        band.classList.add('hidden');
+        learn.classList.add('hidden');
+        card.style.boxShadow = '0 0 40px rgba(217,70,239,0.16), 0 20px 40px rgba(0,0,0,0.6)';
+        card.style.borderColor = 'rgba(217,70,239,0.28)';
+      }
 
       // Paid → unlock immediately; Free roast → blur + ad button
       if (isPaidReading) {
