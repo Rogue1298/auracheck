@@ -931,6 +931,10 @@
 
   <script>
     const GROQ_PROXY = "/api/groq";
+    // Groq model. llama-3.1-8b-instant was deprecated by Groq (Jun 2026);
+    // openai/gpt-oss-20b is the recommended, faster replacement.
+    // If the API/model is ever unavailable, the tool falls back to localReading().
+    const GROQ_MODEL = "openai/gpt-oss-20b";
     // Get your key_id from Razorpay Dashboard → Settings → API Keys
     const RAZORPAY_KEY = "rzp_live_SklKsyW8ZCpaop";
 
@@ -1097,7 +1101,7 @@
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "llama-3.1-8b-instant",
+              model: GROQ_MODEL,
               messages: [{ role: "system", content: systemPrompt }, { role: "user", content: `Name: ${name}. Hobby: ${hobby || 'Nothing'}` }],
               temperature: 0.8
             }),
